@@ -25,6 +25,7 @@ export class NewsService {
       throwIfAborted(signal);
       if (error instanceof RequestError && error.kind === 'cancelled') throw error;
       const cached = await this.storage.readPage(source, page);
+      throwIfAborted(signal);
       if (cached) return { ...cached, origin: 'cache', warning: '刷新失败，正在显示本地缓存，不代表最新新闻' };
       throw error;
     }
@@ -33,6 +34,7 @@ export class NewsService {
     if (!validArticleId(id)) throw new Error('无效的文章地址');
     throwIfAborted(signal);
     const stored = await this.storage.findArticle(id);
+    throwIfAborted(signal);
     if (stored) return stored;
     return this.sources[id.startsWith('hn-') ? 'hn' : 'demo'].article(id, signal);
   }

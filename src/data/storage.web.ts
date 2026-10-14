@@ -1,4 +1,4 @@
-import type { Article, CachedPage } from '../domain/models.ts';
+import type { Article } from '../domain/models.ts';
 import { parseArticle, parseCachedPage, parseSettings } from '../domain/models.ts';
 import type { Storage } from '../domain/ports.ts';
 
@@ -14,9 +14,9 @@ function write(key: string, value: unknown): void {
 }
 export const storage: Storage = {
   async readPage(source, page) {
-    const raw = read<CachedPage | null>(`page.${source}.${page}`, null);
+    const raw = globalThis.localStorage.getItem(`${PREFIX}page.${source}.${page}`);
     if (!raw) return null;
-    try { return parseCachedPage(raw); } catch { return null; }
+    try { return parseCachedPage(JSON.parse(raw)); } catch { return null; }
   },
   async writePage(source, page, data) { write(`page.${source}.${page}`, data); },
   async findArticle(id) {

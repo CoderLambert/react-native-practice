@@ -150,3 +150,15 @@ test('speech chunking handles empty input, long text and Unicode', () => {
   assert.equal(chunks.join(''), input); assert.ok(chunks.every(s => Array.from(s).length <= 2200));
   assert.throws(() => speechChunks('a', 0));
 });
+test('cancellation while reading a saved article is not a successful response', async () => {
+  const store = new MemoryStorage(); const controller = new AbortController();
+  store.findArticle = async () => { controller.abort(); return first; };
+  await assert.rejects(new NewsService(store, { demo: demoSource, hn: fail }).article(first.id, controller.signal),
+    error => error instanceof RequestError && error.kind === 'cancelled');
+});
+test('cancellation during cache fallback is preserved', async () => {
+  const store = new MemoryStorage(); const controller = new AbortController();
+  store.readPage = async () => { controller.abort(); return { items: [first], nextPage: null, savedAt: new Date().toISOString() }; };
+  await assert.rejects(new NewsService(store, { demo: demoSource, hn: fail }).page('hn', 0, controller.signal),
+    error => error instanceof RequestError && error.kind === 'cancelled');
+});

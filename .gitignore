@@ -12,3 +12,5 @@ coverage/
 *.mobileprovision
 .DS_Store
 *.log
+/artifacts/
+__pycache__/
