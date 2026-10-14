@@ -31,6 +31,10 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          # The obsolete SDK "tools" package is no longer published by Google.
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Install
         run: |
           if test -f pnpm-lock.yaml; then pnpm install --frozen-lockfile; else pnpm install --no-frozen-lockfile; fi
