@@ -1,25 +1,49 @@
 # 06 · 验证记录与手动验收
 
-## 初始交付环境的实际证据
+## 2026-10-15 交付验证
 
-| 层级 | 状态 | 说明 |
+代码验证基线：`25e3c3028a636dfbe0e76cbdcaae7a7e93b31d64`。之后仅修改本文档时，不改变下列代码证据对应的范围。
+
+| 层级 | 实际结果 | 证据与边界 |
 |---|---|---|
-| 纯业务测试 | 已在本地执行：29/29 通过 | Node 22.16.0；契约、取消、429、超时、并发、缓存、收藏、深链、Unicode 朗读分片 |
-| SQLite 测试 | 已在本地执行：6/6 通过 | Python sqlite3 执行项目实际迁移 SQL；约束、参数绑定、收藏隔离、幂等 upsert |
-| TypeScript / ESLint / Jest-RNTL | 本地未执行；交给仓库 Quality 检查 | 本地执行环境无法解析 npm registry，不能安装依赖 |
-| Android / Web JS 导出 | 本地未执行；交给 Quality 检查 | JS 导出不等于 Kotlin 编译 |
-| Kotlin / Android APK | 本地未执行；已提供原生编译工作流 | 本地无 Android SDK、Gradle 构建环境或模拟器 |
-| Android 真机 / Maestro | 待实际设备验收 | 脚本存在不能算执行成功 |
-| iOS 构建 / 真机 | 待 Apple/EAS 条件下验收 | Kotlin 实验仅 Android，其他跨平台功能也未声称已验收 |
-| 真正 HN API 联通性 | 实现已提供，未在受限本地网络调用 | Demo 不代表真实网络联通 |
+| TypeScript / ESLint | 通过 | Quality 工作流实际执行，不是只提供脚本 |
+| 纯业务测试 | 31/31 通过 | 契约、取消、429、超时、并发、缓存、收藏、深链、Unicode 分片；本地与 CI 均执行 |
+| SQLite 约束测试 | 6/6 通过 | Python sqlite3 执行实际迁移 SQL；不等于 Android SQLite 包真机验收 |
+| Jest / RNTL 组件测试 | 4/4 通过 | 文章入口、正文类型、禁用按钮、选中状态 |
+| Expo 依赖兼容 / Doctor | 通过 | 修复 RN Web / React types 补丁版本、移除直接安装的 expo-modules-core；没有排除检查来获得通过 |
+| Android / Web JS 导出 | 均通过 | JS/Hermes 打包成功，不等于 Kotlin 编译或设备运行 |
+| 锁文件 | 已验证并提交 | 首轮成功 CI 的 lockfile 已提交，后续 frozen-lockfile 安装成功 |
+| 浏览器实测 | 9 项检查通过，0 个未捕获 JS 异常 | 真实导出应用 + Chrome + Playwright，不是静态假页面 |
+| Android 原生编译 / APK | 尚未取得最终结果 | 远端构建已通过 SDK 初始化、安装与 prebuild，仍在 Gradle 原生编译阶段；不预先声称 APK 已产出 |
+| Android 真机 / Maestro | 未执行 | 没有设备；通知、语音、后台、电量和亮屏仍需真机验证 |
+| iOS 构建 / 真机 | 未执行 | 需要相应 EAS / Apple 签名和设备条件 |
+| 实际 HN API 联通 | 本次未做实时联网验收 | 适配器解析有测试；Demo 与网络 mock 不代表真实来源联通 |
 
-以上是源码交付时的本地证据，不把后续 Actions 结果预先写成成功。以仓库 Actions 具体提交的实际结果为准。
+质量检查：[Quality / 25e3c30](https://github.com/CoderLambert/react-native-practice/actions/runs/38641683295)。
+浏览器检查及五张实际截图：[Web application smoke / 25e3c30](https://github.com/CoderLambert/react-native-practice/actions/runs/38641683308)。产物名 `web-smoke-screenshots-and-results`。
+原生构建：[Android preview APK / f1d710d](https://github.com/CoderLambert/react-native-practice/actions/runs/38640550205)。其 Kotlin 与原生依赖基线和 25e3c30 一致，但该 APK 即使完成也不包含之后的 JS 改动；需要最新包时在 Actions 手动运行 main。
+
+### 浏览器九项检查
+
+默认新闻展示、第二页加载、搜索筛选、文章跳转与收藏、整页重载后收藏恢复、主题重载后保持、清缓存不删收藏、Web 不伪装 Android 能力、无未捕获 JS 异常。
+
+实测发现并修复了 RN Web 未暴露 checked/disabled 状态的问题；保留对应断言，不通过删测试来绕过失败。截图环境安装中文字体，避免缺字体方框被误认为产品界面。
+
+`tests/web_smoke.py` 可在已安装 Chrome/Chromium、Python Playwright 的环境运行：
+
+```bash
+pnpm export:web
+python3 -m pip install playwright==1.56.0
+python3 tests/web_smoke.py
+```
+
+本地执行容器不能连接 npm，也禁止浏览器访问本地 HTTP 地址，因此依赖相关与浏览器检查转到仓库 CI 实际执行。上述结果始终区分本地、CI、浏览器、原生编译与真机，不能相互代替。
 
 ## 人工验收清单
 
 | ID | 操作 | 通过标准 |
 |---|---|---|
-| M01 | 新安装，默认 Demo | 无账号/Key 即可看 6 篇原创建议；明确标为教学示例 |
+| M01 | 新安装，默认 Demo | 无账号/Key 即可看 6 篇原创教学内容；明确标为教学示例 |
 | M02 | 加载第二页、搜索/分类、下拉刷新 | 无重复卡片；搜索范围明确；空态可恢复 |
 | M03 | 收藏、结束进程、断网、重新打开 | 收藏与正文仍在；不是只验证内存缓存 |
 | M04 | 清理资讯缓存 | 收藏不被删除；后续加载可重新建缓存 |
