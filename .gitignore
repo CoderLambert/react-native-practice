@@ -2,8 +2,8 @@ node_modules/
 .expo/
 dist/
 coverage/
-android/
-ios/
+/android/
+/ios/
 .env
 .env.*.local
 *.jks
@@ -12,8 +12,3 @@ ios/
 *.mobileprovision
 .DS_Store
 *.log
-# Local Expo modules are source code, not generated native projects.
-!modules/**/android/
-!modules/**/android/**
-!modules/**/ios/
-!modules/**/ios/**

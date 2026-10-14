@@ -1,0 +1,13 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+group = 'host.lambert.newsdevice'
+version = '0.1.0'
+android {
+  namespace 'host.lambert.newsdevice'
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}

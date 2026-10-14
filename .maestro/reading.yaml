@@ -1,0 +1,25 @@
+# Build and install APP_VARIANT=preview first. Never run clearState against personal data.
+appId: host.lambert.newslab.preview
+---
+- launchApp:
+    clearState: true
+- assertVisible: "闻序"
+- tapOn:
+    id: "article-demo-1"
+- assertVisible: "从网页到原生：同一套 React，不同的运行环境"
+- tapOn:
+    id: "bookmark-toggle"
+- assertVisible: "取消收藏"
+- back
+- tapOn: "收藏"
+- assertVisible: "留给之后的自己"
+- stopApp
+- launchApp
+- tapOn: "收藏"
+- tapOn:
+    id: "article-demo-1"
+- assertVisible: "取消收藏"
+- back
+- tapOn: "原生实验室"
+- assertVisible: "原生实验室"
+- tapOn: "读取系统状态"

@@ -1,0 +1,76 @@
+name: Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      generated_lock: ${{ steps.install.outputs.generated }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - id: install
+        name: Install locked dependencies (bootstrap once)
+        run: |
+          if test -f pnpm-lock.yaml; then
+            echo 'generated=false' >> "$GITHUB_OUTPUT"
+            pnpm install --frozen-lockfile
+          else
+            echo 'generated=true' >> "$GITHUB_OUTPUT"
+            pnpm install --no-frozen-lockfile
+          fi
+      - run: pnpm check
+      - run: pnpm exec expo install --check
+      - run: pnpm doctor
+      - run: pnpm export:android
+      - run: pnpm export:web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validated-dependency-lock
+          path: pnpm-lock.yaml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javascript-bundles
+          path: dist/
+  persist-initial-lock:
+    # Only the first trusted main push may write the lockfile that actually passed checks.
+    # PR code never gets a write token. No force push, no rebase, no source rewriting.
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.checks.outputs.generated_lock == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: validated-dependency-lock
+      - name: Commit verified initial lock only while main is unchanged
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          remote_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$remote_sha" != "$EXPECTED_SHA" ]; then
+            echo 'Main advanced. Keeping lock artifact; refusing to overwrite newer work.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pnpm-lock.yaml
+          git commit -m 'chore: lock dependency graph validated by CI [skip ci]'
+          git push origin HEAD:main
