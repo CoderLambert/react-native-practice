@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { requireOptionalNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo';
 
 export type DeviceSnapshot = { manufacturer: string; model: string; androidVersion: string; sdk: number;
   batteryPercent: number | null; powerSaveMode: boolean; availableMemoryMb: number; totalMemoryMb: number };
