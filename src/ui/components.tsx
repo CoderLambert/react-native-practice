@@ -27,7 +27,7 @@ export function Button({ title, onPress, disabled = false, secondary = false, te
   title: string; onPress: () => void; disabled?: boolean; secondary?: boolean; testID?: string;
 }) {
   const c = useTheme();
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} testID={testID}
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} aria-disabled={disabled} disabled={disabled} onPress={onPress} testID={testID}
     style={({ pressed }) => [s.button, { backgroundColor: secondary ? c.soft : c.accent, opacity: disabled ? 0.45 : pressed ? 0.75 : 1 }]}>
     <Text style={{ color: secondary ? c.text : c.inverse, fontSize: 15, fontWeight: '600', textAlign: 'center' }}>{title}</Text>
   </Pressable>;
@@ -44,7 +44,7 @@ export function Failure({ error, retry }: { error: unknown; retry?: () => void }
     {retry ? <Button title="重试" onPress={retry} secondary /> : null}</View>;
 }
 export function Choice({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  const c = useTheme(); return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} onPress={onPress}
+  const c = useTheme(); return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} aria-checked={selected} onPress={onPress}
     style={[s.choice, { borderColor: selected ? c.accent : c.line, backgroundColor: selected ? c.soft : c.surface }]}>
     <Text style={{ color: selected ? c.accent : c.muted, fontWeight: selected ? '700' : '400' }}>{label}</Text>
   </Pressable>;
